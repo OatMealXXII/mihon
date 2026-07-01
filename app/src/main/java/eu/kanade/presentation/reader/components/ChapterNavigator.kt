@@ -1,6 +1,7 @@
 package eu.kanade.presentation.reader.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.SkipNext
@@ -97,12 +99,32 @@ fun ChapterNavigator(
     val backgroundColor = MaterialTheme.colorScheme
         .surfaceColorAtElevation(3.dp)
         .copy(alpha = if (isSystemInDarkTheme()) 0.9f else 0.95f)
-    val buttonColor = IconButtonDefaults.filledIconButtonColors(
-        containerColor = backgroundColor,
-        disabledContainerColor = backgroundColor,
-    )
 
-    if (type.isHorizontal()) {
+    val isHorizontal = type.isHorizontal()
+
+    val trackBackgroundColor = if (isHorizontal) {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f)
+    } else {
+        backgroundColor
+    }
+
+    val finalButtonColor = if (isHorizontal) {
+        IconButtonDefaults.filledIconButtonColors(
+            containerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.05f),
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = Color.Transparent,
+            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+        )
+    } else {
+        IconButtonDefaults.filledIconButtonColors(
+            containerColor = backgroundColor,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = backgroundColor.copy(alpha = 0.4f),
+            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+        )
+    }
+
+    if (isHorizontal) {
         ChapterNavigator(
             isRtl = type == ChapterNavigatorType.HORIZONTAL_RTL,
             state = state,
@@ -114,8 +136,8 @@ fun ChapterNavigator(
             totalPages = totalPages,
             interactionSource = interactionSource,
             mainAxisPadding = mainAxisPadding,
-            backgroundColor = backgroundColor,
-            buttonColor = buttonColor,
+            backgroundColor = trackBackgroundColor,
+            buttonColor = finalButtonColor,
         )
     } else {
         VerticalChapterNavigator(
@@ -128,8 +150,8 @@ fun ChapterNavigator(
             totalPages = totalPages,
             interactionSource = interactionSource,
             mainAxisPadding = mainAxisPadding,
-            backgroundColor = backgroundColor,
-            buttonColor = buttonColor,
+            backgroundColor = trackBackgroundColor,
+            buttonColor = finalButtonColor,
         )
     }
 }
@@ -163,6 +185,11 @@ fun ChapterNavigator(
                 enabled = if (isRtl) enabledNext else enabledPrevious,
                 onClick = if (isRtl) onNextChapter else onPreviousChapter,
                 colors = buttonColor,
+                modifier = Modifier.border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                ),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.SkipPrevious,
@@ -179,6 +206,11 @@ fun ChapterNavigator(
                             .weight(1f)
                             .clip(RoundedCornerShape(24.dp))
                             .background(backgroundColor)
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(24.dp),
+                            )
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -207,6 +239,11 @@ fun ChapterNavigator(
                 enabled = if (isRtl) enabledPrevious else enabledNext,
                 onClick = if (isRtl) onPreviousChapter else onNextChapter,
                 colors = buttonColor,
+                modifier = Modifier.border(
+                    width = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                    shape = CircleShape,
+                ),
             ) {
                 Icon(
                     imageVector = Icons.Outlined.SkipNext,
@@ -243,6 +280,11 @@ fun VerticalChapterNavigator(
             enabled = enabledPrevious,
             onClick = onPreviousChapter,
             colors = buttonColor,
+            modifier = Modifier.border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                shape = CircleShape,
+            ),
         ) {
             Icon(
                 imageVector = Icons.Outlined.SkipPrevious,
@@ -257,6 +299,11 @@ fun VerticalChapterNavigator(
                     .weight(1f)
                     .clip(RoundedCornerShape(24.dp))
                     .background(backgroundColor)
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                        shape = RoundedCornerShape(24.dp),
+                    )
                     .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
@@ -280,6 +327,11 @@ fun VerticalChapterNavigator(
             enabled = enabledNext,
             onClick = onNextChapter,
             colors = buttonColor,
+            modifier = Modifier.border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.15f),
+                shape = CircleShape,
+            ),
         ) {
             Icon(
                 imageVector = Icons.Outlined.SkipNext,
@@ -289,6 +341,7 @@ fun VerticalChapterNavigator(
         }
     }
 }
+
 
 @Preview
 @Composable

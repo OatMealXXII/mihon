@@ -5,6 +5,8 @@ import eu.kanade.tachiyomi.network.interceptor.CloudflareInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UncaughtExceptionInterceptor
 import eu.kanade.tachiyomi.network.interceptor.UserAgentInterceptor
 import okhttp3.Cache
+import okhttp3.ConnectionPool
+import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import java.io.File
@@ -18,8 +20,21 @@ class NetworkHelper(
     val cookieJar = AndroidCookieJar()
 
     private val clientBuilder: OkHttpClient.Builder = run {
+        val dispatcher = Dispatcher().apply {
+            maxRequests = 12
+            maxRequestsPerHost = 6
+        }
+
+        val connectionPool = ConnectionPool(
+            maxIdleConnections = 5,
+            keepAliveDuration = 30,
+            timeUnit = TimeUnit.SECONDS,
+        )
+
         val builder = OkHttpClient.Builder()
             .cookieJar(cookieJar)
+            .dispatcher(dispatcher)
+            .connectionPool(connectionPool)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .callTimeout(2, TimeUnit.MINUTES)

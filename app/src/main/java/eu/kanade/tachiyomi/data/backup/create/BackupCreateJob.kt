@@ -91,9 +91,11 @@ class BackupCreateJob(private val context: Context, workerParams: WorkerParamete
             val backupPreferences = Injekt.get<BackupPreferences>()
             val interval = prefInterval ?: backupPreferences.backupInterval.get()
             if (interval > 0) {
-                val constraints = Constraints(
-                    requiresBatteryNotLow = true,
-                )
+                val constraints = Constraints.Builder()
+                    .setRequiresBatteryNotLow(true)
+                    .setRequiresCharging(true)
+                    .setRequiredNetworkType(androidx.work.NetworkType.UNMETERED)
+                    .build()
 
                 val request = PeriodicWorkRequestBuilder<BackupCreateJob>(
                     interval.toLong(),

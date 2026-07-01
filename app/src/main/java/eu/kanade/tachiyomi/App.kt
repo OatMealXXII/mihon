@@ -22,6 +22,9 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.allowRgb565
 import coil3.request.crossfade
 import coil3.util.DebugLogger
+import coil3.disk.DiskCache
+import okio.Path.Companion.toOkioPath
+
 import dev.mihon.injekt.patchInjekt
 import eu.kanade.domain.DomainModule
 import eu.kanade.domain.base.BasePreferences
@@ -208,6 +211,13 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                     .maxSizePercent(context)
                     .build(),
             )
+
+            diskCache {
+                DiskCache.Builder()
+                    .directory(context.cacheDir.resolve("image_cache").toOkioPath())
+                    .maxSizeBytes(100L * 1024 * 1024)
+                    .build()
+            }
 
             crossfade((300 * this@App.animatorDurationScale).toInt())
             allowRgb565(DeviceUtil.isLowRamDevice(this@App))
