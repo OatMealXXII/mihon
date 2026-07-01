@@ -9,6 +9,7 @@ import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
@@ -108,6 +109,11 @@ import uy.kohesive.injekt.api.get
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.math.roundToInt
+
+import eu.kanade.tachiyomi.util.lang.sanitizeHtml
+import tachiyomi.presentation.core.components.ComicSpeechBubbleShape
+import tachiyomi.presentation.core.components.ComicPanelShape
+import tachiyomi.presentation.core.components.comicBorder
 
 @Composable
 fun MangaInfoBox(
@@ -259,8 +265,8 @@ fun ExpandableMangaDescription(
         val (expanded, onExpanded) = rememberSaveable {
             mutableStateOf(defaultExpandState)
         }
-        val desc =
-            description.takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
+        val desc = remember(description) { description?.sanitizeHtml() }
+            .takeIf { !it.isNullOrBlank() } ?: stringResource(MR.strings.description_placeholder)
 
         MangaSummary(
             description = desc,
@@ -356,7 +362,9 @@ private fun MangaAndSourceTitlesLarge(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         MangaCover.Book(
-            modifier = Modifier.fillMaxWidth(0.65f),
+            modifier = Modifier
+                .fillMaxWidth(0.65f)
+                .comicBorder(shape = ComicPanelShape(topRightOffset = 12f, bottomLeftOffset = 8f)),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -397,7 +405,8 @@ private fun MangaAndSourceTitlesSmall(
         MangaCover.Book(
             modifier = Modifier
                 .sizeIn(maxWidth = 100.dp)
-                .align(Alignment.Top),
+                .align(Alignment.Top)
+                .comicBorder(shape = ComicPanelShape(topRightOffset = 8f, bottomLeftOffset = 6f)),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -433,103 +442,144 @@ private fun ColumnScope.MangaContentInfo(
     textAlign: TextAlign? = LocalTextStyle.current.textAlign,
 ) {
     val context = LocalContext.current
-    Text(
-        text = title.ifBlank { stringResource(MR.strings.unknown_title) },
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.clickableNoIndication(
-            onLongClick = {
-                if (title.isNotBlank()) {
-                    context.copyToClipboard(
-                        title,
-                        title,
-                    )
-                }
-            },
-            onClick = { if (title.isNotBlank()) doSearch(title, true) },
-        ),
-        textAlign = textAlign,
-    )
+    val sanitizedTitle = remember(title) { title.sanitizeHtml() }
+    val sanitizedAuthor = remember(author) { author.sanitizeHtml() }
+    val sanitizedArtist = remember(artist) { artist.sanitizeHtml() }
 
-    Spacer(modifier = Modifier.height(2.dp))
-
-    Row(
-        modifier = Modifier.secondaryItemAlpha(),
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
-        verticalAlignment = Alignment.CenterVertically,
+    // Title inside a comic panel box
+    Box(
+        modifier = Modifier
+            .padding(vertical = 4.dp)
+            .comicBorder(shape = ComicPanelShape(topRightOffset = 16f, bottomLeftOffset = 8f))
+            .background(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = ComicPanelShape(topRightOffset = 16f, bottomLeftOffset = 8f)
+            )
+            .padding(12.dp)
     ) {
-        Icon(
-            imageVector = Icons.Filled.PersonOutline,
-            contentDescription = null,
-            modifier = Modifier.size(16.dp),
-        )
         Text(
-            text = author?.takeIf { it.isNotBlank() }
-                ?: stringResource(MR.strings.unknown_author),
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier
-                .clickableNoIndication(
-                    onLongClick = {
-                        if (!author.isNullOrBlank()) {
-                            context.copyToClipboard(
-                                author,
-                                author,
-                            )
-                        }
-                    },
-                    onClick = { if (!author.isNullOrBlank()) doSearch(author, true) },
-                ),
+            text = sanitizedTitle.ifBlank { stringResource(MR.strings.unknown_title) },
+            style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onPrimaryContainer),
+            modifier = Modifier.clickableNoIndication(
+                onLongClick = {
+                    if (sanitizedTitle.isNotBlank()) {
+                        context.copyToClipboard(sanitizedTitle, sanitizedTitle)
+                    }
+                },
+                onClick = { if (sanitizedTitle.isNotBlank()) doSearch(sanitizedTitle, true) },
+            ),
             textAlign = textAlign,
         )
     }
 
-    if (!artist.isNullOrBlank() && author != artist) {
+    Spacer(modifier = Modifier.height(4.dp))
+
+    // Author inside a speech bubble
+    Box(
+        modifier = Modifier
+            .padding(vertical = 4.dp)
+            .comicBorder(shape = ComicSpeechBubbleShape(cornerRadius = 16f))
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = ComicSpeechBubbleShape(cornerRadius = 16f)
+            )
+            .padding(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 18.dp)
+    ) {
         Row(
-            modifier = Modifier.secondaryItemAlpha(),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
             verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
         ) {
             Icon(
-                imageVector = Icons.Filled.Brush,
+                imageVector = Icons.Filled.PersonOutline,
                 contentDescription = null,
                 modifier = Modifier.size(16.dp),
             )
             Text(
-                text = artist,
+                text = sanitizedAuthor.takeIf { it.isNotBlank() }
+                    ?: stringResource(MR.strings.unknown_author),
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier
                     .clickableNoIndication(
-                        onLongClick = { context.copyToClipboard(artist, artist) },
-                        onClick = { doSearch(artist, true) },
+                        onLongClick = {
+                            if (sanitizedAuthor.isNotBlank()) {
+                                context.copyToClipboard(sanitizedAuthor, sanitizedAuthor)
+                            }
+                        },
+                        onClick = { if (sanitizedAuthor.isNotBlank()) doSearch(sanitizedAuthor, true) },
                     ),
                 textAlign = textAlign,
             )
         }
     }
 
-    Spacer(modifier = Modifier.height(2.dp))
-
-    Row(
-        modifier = Modifier.secondaryItemAlpha(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            imageVector = when (status) {
-                SManga.ONGOING.toLong() -> Icons.Outlined.Schedule
-                SManga.COMPLETED.toLong() -> Icons.Outlined.DoneAll
-                SManga.LICENSED.toLong() -> Icons.Outlined.AttachMoney
-                SManga.PUBLISHING_FINISHED.toLong() -> Icons.Outlined.Done
-                SManga.CANCELLED.toLong() -> Icons.Outlined.Close
-                SManga.ON_HIATUS.toLong() -> Icons.Outlined.Pause
-                else -> Icons.Outlined.Block
-            },
-            contentDescription = null,
+    if (sanitizedArtist.isNotBlank() && sanitizedAuthor != sanitizedArtist) {
+        // Artist inside an offset panel box
+        Box(
             modifier = Modifier
-                .padding(end = 4.dp)
-                .size(16.dp),
-        )
-        ProvideTextStyle(MaterialTheme.typography.bodyMedium) {
-            Text(
-                text = when (status) {
+                .padding(vertical = 4.dp)
+                .comicBorder(shape = ComicPanelShape(topLeftOffset = 12f, bottomRightOffset = 8f))
+                .background(
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    shape = ComicPanelShape(topLeftOffset = 12f, bottomRightOffset = 8f)
+                )
+                .padding(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Brush,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
+                Text(
+                    text = sanitizedArtist,
+                    style = MaterialTheme.typography.titleSmall.copy(color = MaterialTheme.colorScheme.onSecondaryContainer),
+                    modifier = Modifier
+                        .clickableNoIndication(
+                            onLongClick = { context.copyToClipboard(sanitizedArtist, sanitizedArtist) },
+                            onClick = { doSearch(sanitizedArtist, true) },
+                        ),
+                    textAlign = textAlign,
+                )
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(4.dp))
+
+    // Status and Source inside a speech bubble
+    Box(
+        modifier = Modifier
+            .padding(vertical = 4.dp)
+            .comicBorder(shape = ComicSpeechBubbleShape(cornerRadius = 12f))
+            .background(
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shape = ComicSpeechBubbleShape(cornerRadius = 12f)
+            )
+            .padding(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Icon(
+                imageVector = when (status) {
+                    SManga.ONGOING.toLong() -> Icons.Outlined.Schedule
+                    SManga.COMPLETED.toLong() -> Icons.Outlined.DoneAll
+                    SManga.LICENSED.toLong() -> Icons.Outlined.AttachMoney
+                    SManga.PUBLISHING_FINISHED.toLong() -> Icons.Outlined.Done
+                    SManga.CANCELLED.toLong() -> Icons.Outlined.Close
+                    SManga.ON_HIATUS.toLong() -> Icons.Outlined.Pause
+                    else -> Icons.Outlined.Block
+                },
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onTertiaryContainer,
+            )
+            ProvideTextStyle(MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onTertiaryContainer)) {
+                val statusText = when (status) {
                     SManga.ONGOING.toLong() -> stringResource(MR.strings.ongoing)
                     SManga.COMPLETED.toLong() -> stringResource(MR.strings.completed)
                     SManga.LICENSED.toLong() -> stringResource(MR.strings.licensed)
@@ -537,32 +587,28 @@ private fun ColumnScope.MangaContentInfo(
                     SManga.CANCELLED.toLong() -> stringResource(MR.strings.cancelled)
                     SManga.ON_HIATUS.toLong() -> stringResource(MR.strings.on_hiatus)
                     else -> stringResource(MR.strings.unknown)
-                },
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
-            DotSeparatorText()
-            if (isStubSource) {
-                Icon(
-                    imageVector = Icons.Filled.Warning,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(end = 4.dp)
-                        .size(16.dp),
-                    tint = MaterialTheme.colorScheme.error,
+                }
+                Text(
+                    text = statusText,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
+                )
+                DotSeparatorText()
+                if (isStubSource) {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.error,
+                    )
+                }
+                Text(
+                    text = sourceName,
+                    modifier = Modifier.clickableNoIndication { doSearch(sourceName, false) },
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 1,
                 )
             }
-            Text(
-                text = sourceName,
-                modifier = Modifier.clickableNoIndication {
-                    doSearch(
-                        sourceName,
-                        false,
-                    )
-                },
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 1,
-            )
         }
     }
 }
@@ -707,11 +753,17 @@ private fun TagsChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
+    val sanitizedText = remember(text) { text.sanitizeHtml() }
     CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
         SuggestionChip(
-            modifier = modifier,
+            modifier = modifier
+                .comicBorder(
+                    shape = RoundedCornerShape(4.dp),
+                    borderWidth = 1.dp,
+                    shadowOffset = 2.dp
+                ),
             onClick = onClick,
-            label = { Text(text = text, style = MaterialTheme.typography.bodySmall) },
+            label = { Text(text = sanitizedText, style = MaterialTheme.typography.bodySmall) },
         )
     }
 }
@@ -724,25 +776,40 @@ private fun RowScope.MangaActionButton(
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
 ) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.weight(1f),
-        onLongClick = onLongClick,
+    Box(
+        modifier = Modifier
+            .weight(1f)
+            .padding(4.dp)
+            .comicBorder(
+                shape = RoundedCornerShape(8.dp),
+                borderWidth = 1.dp,
+                shadowOffset = 2.dp
+            )
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(8.dp)
+            )
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(20.dp),
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                text = title,
-                color = color,
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-            )
+        TextButton(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth(),
+            onLongClick = onLongClick,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(20.dp),
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = title,
+                    color = color,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }

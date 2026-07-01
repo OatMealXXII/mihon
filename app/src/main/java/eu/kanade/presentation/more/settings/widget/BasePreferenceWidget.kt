@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -27,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
+import tachiyomi.presentation.core.components.comicBorder
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.more.settings.LocalPreferenceHighlighted
@@ -45,42 +47,56 @@ internal fun BasePreferenceWidget(
 ) {
     val highlighted = LocalPreferenceHighlighted.current
     val minHeight = LocalPreferenceMinHeight.current
-    Row(
+    Box(
         modifier = modifier
-            .highlightBackground(highlighted)
-            .sizeIn(minHeight = minHeight)
-            .clickable(enabled = onClick != null, onClick = { onClick?.invoke() })
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (icon != null) {
-            Box(
-                modifier = Modifier.padding(start = PrefsHorizontalPadding, end = 8.dp),
-                content = { icon() },
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .comicBorder(
+                shape = RoundedCornerShape(8.dp),
+                borderWidth = 1.dp,
+                shadowOffset = 2.dp
             )
-        }
-        Column(
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(8.dp)
+            )
+    ) {
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .padding(vertical = PrefsVerticalPadding),
+                .highlightBackground(highlighted)
+                .sizeIn(minHeight = minHeight)
+                .clickable(enabled = onClick != null, onClick = { onClick?.invoke() })
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (!title.isNullOrBlank()) {
-                Text(
-                    modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
-                    text = title,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 2,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontSize = TitleFontSize,
+            if (icon != null) {
+                Box(
+                    modifier = Modifier.padding(start = PrefsHorizontalPadding, end = 8.dp),
+                    content = { icon() },
                 )
             }
-            subcomponent?.invoke(this)
-        }
-        if (widget != null) {
-            Box(
-                modifier = Modifier.padding(end = PrefsHorizontalPadding),
-                content = { widget() },
-            )
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(vertical = PrefsVerticalPadding),
+            ) {
+                if (!title.isNullOrBlank()) {
+                    Text(
+                        modifier = Modifier.padding(horizontal = PrefsHorizontalPadding),
+                        text = title,
+                        overflow = TextOverflow.Ellipsis,
+                        maxLines = 2,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontSize = TitleFontSize,
+                    )
+                }
+                subcomponent?.invoke(this)
+            }
+            if (widget != null) {
+                Box(
+                    modifier = Modifier.padding(end = PrefsHorizontalPadding),
+                    content = { widget() },
+                )
+            }
         }
     }
 }

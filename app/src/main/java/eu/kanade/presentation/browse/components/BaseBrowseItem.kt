@@ -1,13 +1,19 @@
 package eu.kanade.presentation.browse.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import tachiyomi.presentation.core.components.ComicPanelShape
+import tachiyomi.presentation.core.components.comicBorder
 import tachiyomi.presentation.core.components.material.padding
 
 @Composable
@@ -19,17 +25,31 @@ fun BaseBrowseItem(
     action: @Composable RowScope.() -> Unit = {},
     content: @Composable RowScope.() -> Unit = {},
 ) {
-    Row(
+    Box(
         modifier = modifier
-            .combinedClickable(
-                onClick = onClickItem,
-                onLongClick = onLongClickItem,
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .comicBorder(
+                shape = ComicPanelShape(topRightOffset = 6f, bottomLeftOffset = 6f),
+                borderWidth = 1.dp,
+                shadowOffset = 2.dp
             )
-            .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
-        verticalAlignment = Alignment.CenterVertically,
+            .background(
+                color = MaterialTheme.colorScheme.surface,
+                shape = ComicPanelShape(topRightOffset = 6f, bottomLeftOffset = 6f)
+            )
     ) {
-        icon()
-        content()
-        action()
+        Row(
+            modifier = Modifier
+                .combinedClickable(
+                    onClick = onClickItem,
+                    onLongClick = onLongClickItem,
+                )
+                .padding(horizontal = MaterialTheme.padding.medium, vertical = MaterialTheme.padding.small),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            icon()
+            content()
+            action()
+        }
     }
 }

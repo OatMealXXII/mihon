@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -39,8 +40,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import eu.kanade.presentation.manga.components.MangaCover
+import eu.kanade.tachiyomi.util.lang.sanitizeHtml
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.BadgeGroup
+import tachiyomi.presentation.core.components.ComicSpeechBubbleShape
+import tachiyomi.presentation.core.components.ComicPanelShape
+import tachiyomi.presentation.core.components.comicBorder
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
 import tachiyomi.domain.manga.model.MangaCover as MangaCoverModel
@@ -273,9 +278,10 @@ private fun GridItemTitle(
     modifier: Modifier = Modifier,
     maxLines: Int = 2,
 ) {
+    val sanitizedTitle = remember(title) { title.sanitizeHtml() }
     Text(
         modifier = modifier,
-        text = title,
+        text = sanitizedTitle,
         fontSize = 12.sp,
         lineHeight = 18.sp,
         minLines = minLines,
@@ -298,12 +304,15 @@ private fun GridItemSelectable(
 ) {
     Box(
         modifier = modifier
-            .clip(MaterialTheme.shapes.small)
+            .comicBorder(
+                shape = RoundedCornerShape(8.dp),
+                borderWidth = if (isSelected) 2.dp else 1.dp,
+                shadowOffset = if (isSelected) 3.dp else 2.dp
+            )
             .combinedClickable(
                 onClick = onClick,
                 onLongClick = onLongClick,
             )
-            .selectedOutline(isSelected = isSelected, color = MaterialTheme.colorScheme.secondary)
             .padding(4.dp),
     ) {
         val contentColor = if (isSelected) {
@@ -316,14 +325,6 @@ private fun GridItemSelectable(
         }
     }
 }
-
-/**
- * @see GridItemSelectable
- */
-private fun Modifier.selectedOutline(
-    isSelected: Boolean,
-    color: Color,
-) = drawBehind { if (isSelected) drawRect(color = color) }
 
 /**
  * Layout of list item.
@@ -339,6 +340,7 @@ fun MangaListItem(
     coverAlpha: Float = 1f,
     onClickContinueReading: (() -> Unit)? = null,
 ) {
+    val sanitizedTitle = remember(title) { title.sanitizeHtml() }
     Row(
         modifier = Modifier
             .selectedBackground(isSelected)
@@ -353,11 +355,12 @@ fun MangaListItem(
         MangaCover.Square(
             modifier = Modifier
                 .fillMaxHeight()
-                .alpha(coverAlpha),
+                .alpha(coverAlpha)
+                .comicBorder(shape = RoundedCornerShape(4.dp), borderWidth = 1.dp, shadowOffset = 1.dp),
             data = coverData,
         )
         Text(
-            text = title,
+            text = sanitizedTitle,
             modifier = Modifier
                 .padding(horizontal = 16.dp)
                 .weight(1f),

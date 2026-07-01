@@ -65,3 +65,21 @@ fun String.takeBytes(n: Int): String {
 fun String.htmlDecode(): String {
     return this.parseAsHtml().toString()
 }
+
+/**
+ * Sanitizes text input from remote extensions by mapping break tags to newlines,
+ * stripping script/iframe blocks, and removing any other HTML tags or JavaScript schemes.
+ */
+fun String?.sanitizeHtml(): String {
+    if (this == null) return ""
+    // 1. Map break tags to standard Kotlin newline
+    val withNewlines = this.replace(Regex("(?i)<br\\s*/?>"), "\n")
+    // 2. Strip scripts and iframes with their content
+    val noScripts = withNewlines.replace(Regex("(?i)<script[\\s\\S]*?</script>"), "")
+    val noIframes = noScripts.replace(Regex("(?i)<iframe[\\s\\S]*?</iframe>"), "")
+    // 3. Strip event handlers and javascript: URI schemes
+    val noJs = noIframes.replace(Regex("(?i)on\\w+\\s*=\\s*\"[^\"]*\"|on\\w+\\s*=\\s*'[^']*'|on\\w+\\s*=\\s*\\S+"), "")
+        .replace(Regex("(?i)javascript:"), "")
+    // 4. Strip all other HTML tags
+    return noJs.replace(Regex("<[\\s\\S]*?>"), "")
+}

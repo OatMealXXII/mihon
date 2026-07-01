@@ -5,6 +5,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,6 +38,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import tachiyomi.presentation.core.components.comicBorder
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -126,7 +132,19 @@ fun AppBar(
     scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
     Column(
-        modifier = modifier,
+        modifier = modifier
+            .padding(start = 16.dp, end = 16.dp, top = 12.dp)
+            .comicBorder(
+                shape = RoundedCornerShape(12.dp),
+                borderWidth = 2.dp,
+                shadowOffset = 3.dp
+            )
+            .background(
+                color = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(
+                    elevation = if (isActionMode) 3.dp else 0.dp,
+                ),
+                shape = RoundedCornerShape(12.dp)
+            ),
     ) {
         TopAppBar(
             navigationIcon = {
@@ -148,9 +166,7 @@ fun AppBar(
             title = titleContent,
             actions = actions,
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(
-                    elevation = if (isActionMode) 3.dp else 0.dp,
-                ),
+                containerColor = Color.Transparent,
             ),
             scrollBehavior = scrollBehavior,
         )
@@ -169,12 +185,19 @@ fun AppBarTitle(
                 text = it,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleLarge.copy(
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
             )
         }
         subtitle?.let {
             Text(
                 text = it,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                ),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.basicMarquee(
